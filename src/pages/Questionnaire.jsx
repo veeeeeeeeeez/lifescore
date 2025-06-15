@@ -4,7 +4,7 @@ const CATEGORIES = [
   {
     id: 'education',
     title: 'Education',
-    weight: 0.20,
+    weight: 0.25,
     questions: [
       {
         id: 'degree',
@@ -24,82 +24,113 @@ const CATEGORIES = [
         question: 'What was your major?',
         type: 'text',
         weight: 0.3
-      }
-    ]
-  },
-  {
-    id: 'skills',
-    title: 'Skills',
-    weight: 0.25,
-    questions: [
-      {
-        id: 'hardSkills',
-        question: 'What are your top 3 hard skills?',
-        type: 'tags',
-        weight: 0.4
       },
       {
         id: 'certifications',
-        question: 'Any certifications?',
+        question: 'List any professional certifications (comma-separated)',
         type: 'tags',
-        weight: 0.3
-      },
-      {
-        id: 'languages',
-        question: 'Languages spoken?',
-        type: 'tags',
-        weight: 0.3
+        weight: 0.2
       }
     ]
   },
   {
     id: 'social',
-    title: 'Social',
+    title: 'Social Capital',
     weight: 0.30,
     questions: [
       {
-        id: 'connections',
-        question: 'How many close professional connections do you have?',
-        type: 'number',
-        weight: 0.4
+        id: 'linkedin',
+        question: 'Do you have a LinkedIn profile?',
+        type: 'boolean',
+        weight: 0.2
       },
       {
-        id: 'linkedin',
-        question: 'Do you have a LinkedIn?',
-        type: 'boolean',
-        weight: 0.3
+        id: 'linkedinConnections',
+        question: 'How many LinkedIn connections do you have?',
+        type: 'number',
+        weight: 0.2
       },
       {
         id: 'instagram',
-        question: 'Do you have an Instagram?',
+        question: 'Do you have an Instagram account?',
         type: 'boolean',
+        weight: 0.2
+      },
+      {
+        id: 'instagramFollowers',
+        question: 'How many Instagram followers do you have?',
+        type: 'number',
+        weight: 0.2
+      },
+      {
+        id: 'closeConnections',
+        question: 'How many close professional connections do you have?',
+        type: 'number',
+        weight: 0.2
+      }
+    ]
+  },
+  {
+    id: 'skills',
+    title: 'Skills & Experience',
+    weight: 0.25,
+    questions: [
+      {
+        id: 'hardSkills',
+        question: 'What are your top 5 hard skills? (comma-separated)',
+        type: 'tags',
+        weight: 0.3
+      },
+      {
+        id: 'softSkills',
+        question: 'What are your top 3 soft skills? (comma-separated)',
+        type: 'tags',
+        weight: 0.2
+      },
+      {
+        id: 'languages',
+        question: 'What languages do you speak? (comma-separated)',
+        type: 'tags',
+        weight: 0.2
+      },
+      {
+        id: 'yearsExperience',
+        question: 'Years of professional experience?',
+        type: 'number',
         weight: 0.3
       }
     ]
   },
   {
     id: 'wealth',
-    title: 'Wealth',
-    weight: 0.25,
+    title: 'Financial Profile',
+    weight: 0.20,
     questions: [
       {
         id: 'savings',
-        question: 'Do you currently have savings?',
+        question: 'Do you have savings?',
         type: 'boolean',
-        weight: 0.4
+        weight: 0.3
+      },
+      {
+        id: 'savingsAmount',
+        question: 'Approximate amount in savings?',
+        type: 'select',
+        options: ['$0 - $1,000', '$1,000 - $5,000', '$5,000 - $10,000', '$10,000 - $50,000', '$50,000+'],
+        weight: 0.3
       },
       {
         id: 'parentIncome',
         question: 'Estimate of parent\'s household income?',
         type: 'select',
         options: ['< $50k', '$50k - $100k', '$100k - $200k', '$200k - $500k', '> $500k'],
-        weight: 0.3
+        weight: 0.2
       },
       {
         id: 'familyAssets',
-        question: 'Any family assets?',
+        question: 'Any significant family assets?',
         type: 'boolean',
-        weight: 0.3
+        weight: 0.2
       }
     ]
   }

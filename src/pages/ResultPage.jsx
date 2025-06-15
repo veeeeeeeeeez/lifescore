@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-
-const CATEGORY_WEIGHTS = {
-  education: 0.20,
-  skills: 0.25,
-  social: 0.30,
-  wealth: 0.25
-}
+import {
+  CATEGORY_WEIGHTS,
+  EDUCATION_SCORES,
+  SOCIAL_SCORES,
+  SKILLS_SCORES,
+  WEALTH_SCORES,
+  SUGGESTION_THRESHOLDS,
+  SCORE_MULTIPLIERS
+} from '../config/scoring'
 
 const calculateScore = (data) => {
   const scores = {}
@@ -21,45 +23,84 @@ const calculateScore = (data) => {
     switch (category) {
       case 'education':
         if (answers.degree) {
-          const degreeScores = {
-            'High School': 40,
-            'Associate': 60,
-            'Bachelor': 80,
-            'Master': 90,
-            'PhD': 100,
-            'Other': 50
-          }
-          categoryScore += degreeScores[answers.degree] * 0.4
+          categoryScore += EDUCATION_SCORES.degrees[answers.degree] * EDUCATION_SCORES.degreeWeight
         }
-        if (answers.school) categoryScore += 30
-        if (answers.major) categoryScore += 30
-        break
-
-      case 'skills':
-        if (answers.hardSkills?.length) categoryScore += Math.min(answers.hardSkills.length * 20, 100) * 0.4
-        if (answers.certifications?.length) categoryScore += Math.min(answers.certifications.length * 25, 100) * 0.3
-        if (answers.languages?.length) categoryScore += Math.min(answers.languages.length * 25, 100) * 0.3
+        if (answers.school) {
+          if (EDUCATION_SCORES.prestigiousSchools.some(school => 
+            answers.school.toLowerCase().includes(school.toLowerCase()))) {
+            categoryScore += EDUCATION_SCORES.prestigiousSchoolBonus
+          } else {
+            categoryScore += EDUCATION_SCORES.regularSchoolPoints
+          }
+        }
+        if (answers.major) categoryScore += 20
+        if (answers.certifications?.length) {
+          categoryScore += Math.min(
+            answers.certifications.length * EDUCATION_SCORES.certificationPointsPerCert,
+            EDUCATION_SCORES.maxCertificationPoints
+          )
+        }
         break
 
       case 'social':
-        if (answers.connections) categoryScore += Math.min(answers.connections * 2, 100) * 0.4
-        if (answers.linkedin) categoryScore += 30
-        if (answers.instagram) categoryScore += 30
+        if (answers.linkedin) categoryScore += SOCIAL_SCORES.linkedinProfilePoints
+        if (answers.linkedinConnections) {
+          categoryScore += Math.min(
+            answers.linkedinConnections * SOCIAL_SCORES.linkedinConnectionPoints.pointsPerConnection,
+            SOCIAL_SCORES.linkedinConnectionPoints.maxPoints
+          )
+        }
+        if (answers.instagram) categoryScore += SOCIAL_SCORES.instagramProfilePoints
+        if (answers.instagramFollowers) {
+          categoryScore += Math.min(
+            answers.instagramFollowers * SOCIAL_SCORES.instagramFollowerPoints.pointsPerFollower,
+            SOCIAL_SCORES.instagramFollowerPoints.maxPoints
+          )
+        }
+        if (answers.closeConnections) {
+          categoryScore += Math.min(
+            answers.closeConnections * SOCIAL_SCORES.closeConnectionPoints.pointsPerConnection,
+            SOCIAL_SCORES.closeConnectionPoints.maxPoints
+          )
+        }
+        break
+
+      case 'skills':
+        if (answers.hardSkills?.length) {
+          categoryScore += Math.min(
+            answers.hardSkills.length * SKILLS_SCORES.hardSkills.pointsPerSkill,
+            SKILLS_SCORES.hardSkills.maxPoints
+          )
+        }
+        if (answers.softSkills?.length) {
+          categoryScore += Math.min(
+            answers.softSkills.length * SKILLS_SCORES.softSkills.pointsPerSkill,
+            SKILLS_SCORES.softSkills.maxPoints
+          )
+        }
+        if (answers.languages?.length) {
+          categoryScore += Math.min(
+            answers.languages.length * SKILLS_SCORES.languages.pointsPerLanguage,
+            SKILLS_SCORES.languages.maxPoints
+          )
+        }
+        if (answers.yearsExperience) {
+          categoryScore += Math.min(
+            answers.yearsExperience * SKILLS_SCORES.experience.pointsPerYear,
+            SKILLS_SCORES.experience.maxPoints
+          )
+        }
         break
 
       case 'wealth':
-        if (answers.savings) categoryScore += 40
-        if (answers.parentIncome) {
-          const incomeScores = {
-            '< $50k': 20,
-            '$50k - $100k': 40,
-            '$100k - $200k': 60,
-            '$200k - $500k': 80,
-            '> $500k': 100
-          }
-          categoryScore += incomeScores[answers.parentIncome] * 0.3
+        if (answers.savings) categoryScore += WEALTH_SCORES.hasSavingsPoints
+        if (answers.savingsAmount) {
+          categoryScore += WEALTH_SCORES.savingsAmount[answers.savingsAmount] * WEALTH_SCORES.savingsWeight
         }
-        if (answers.familyAssets) categoryScore += 30
+        if (answers.parentIncome) {
+          categoryScore += WEALTH_SCORES.parentIncome[answers.parentIncome] * WEALTH_SCORES.parentIncomeWeight
+        }
+        if (answers.familyAssets) categoryScore += WEALTH_SCORES.familyAssetsPoints
         break
     }
 
@@ -74,23 +115,49 @@ const generateSuggestions = (data, scores) => {
   const suggestions = []
 
   // Education suggestions
-  if (scores.education < 70) {
-    suggestions.push('Consider pursuing additional certifications or degrees to boost your education score')
-  }
-
-  // Skills suggestions
-  if (scores.skills < 70) {
-    suggestions.push('Expand your skill set by learning new technologies or getting industry certifications')
+  if (scores.education < SUGGESTION_THRESHOLDS.lowScoreThreshold) {
+    if (!data.education.certifications?.length) {
+      suggestions.push('Consider obtaining industry certifications to boost your education score')
+    }
+    if (!data.education.school) {
+      suggestions.push('Completing a degree program could significantly increase your education score')
+    }
   }
 
   // Social suggestions
-  if (scores.social < 70) {
-    suggestions.push('Build your professional network by attending industry events and connecting on LinkedIn')
+  if (scores.social < SUGGESTION_THRESHOLDS.lowScoreThreshold) {
+    if (!data.social.linkedin) {
+      suggestions.push('Create a LinkedIn profile to expand your professional network')
+    }
+    if (data.social.linkedinConnections < SUGGESTION_THRESHOLDS.linkedinConnectionsThreshold) {
+      suggestions.push('Grow your LinkedIn network by connecting with industry professionals')
+    }
+    if (data.social.closeConnections < SUGGESTION_THRESHOLDS.closeConnectionsThreshold) {
+      suggestions.push('Focus on building deeper relationships with key professional contacts')
+    }
+  }
+
+  // Skills suggestions
+  if (scores.skills < SUGGESTION_THRESHOLDS.lowScoreThreshold) {
+    if (data.skills.hardSkills?.length < SUGGESTION_THRESHOLDS.hardSkillsThreshold) {
+      suggestions.push('Develop more technical skills relevant to your industry')
+    }
+    if (data.skills.softSkills?.length < SUGGESTION_THRESHOLDS.softSkillsThreshold) {
+      suggestions.push('Work on developing key soft skills like communication and leadership')
+    }
+    if (data.skills.yearsExperience < SUGGESTION_THRESHOLDS.experienceThreshold) {
+      suggestions.push('Gain more professional experience through internships or entry-level positions')
+    }
   }
 
   // Wealth suggestions
-  if (scores.wealth < 70) {
-    suggestions.push('Start building your savings and explore investment opportunities')
+  if (scores.wealth < SUGGESTION_THRESHOLDS.lowScoreThreshold) {
+    if (!data.wealth.savings) {
+      suggestions.push('Start building your savings to improve your financial profile')
+    }
+    if (data.wealth.savingsAmount === '$0 - $1,000') {
+      suggestions.push('Create a budget and savings plan to build your financial foundation')
+    }
   }
 
   return suggestions
@@ -107,10 +174,10 @@ export default function ResultPage({ data }) {
   }))
 
   useEffect(() => {
-    const finalScore = Math.round(totalScore * 1000)
+    const finalScore = Math.round(totalScore * SCORE_MULTIPLIERS.finalScoreMultiplier)
     let currentScore = 0
-    const duration = 2000 // 2 seconds
-    const interval = 20 // Update every 20ms
+    const duration = SCORE_MULTIPLIERS.animationDuration
+    const interval = SCORE_MULTIPLIERS.animationInterval
     const steps = duration / interval
     const increment = finalScore / steps
 
