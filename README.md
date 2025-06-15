@@ -49,3 +49,4 @@ npm run dev
 - More detailed scoring algorithms
 - Export/share functionality
 - Historical score tracking
+# lifescore
